@@ -1,0 +1,41 @@
+version: '3'  #?
+
+# the services (containes?) that compose orchestrates
+services:
+
+        mongodb:
+                image: mongo
+                ports:
+                - 27017:27017
+        #crates tweet_colletcor directory, shares (volume) the host directory with /app directory in container
+        tweet_collector:
+                build: tweet_collector/
+                volumes: 
+                - ./tweet_collector/:/app
+                depends_on:
+                - mongodb
+                environment:
+                - TWITTER_API_KEY=${TWITTER_API_KEY}
+                - TWITTER_API_SECRET=${TWITTER_API_SECRET}
+                - TWITTER_ACCESS_TOKEN=${TWITTER_ACCESS_TOKEN}
+                - TWITTER_TOKEN_SECRET=${TWITTER_TOKEN_SECRET}
+
+        etl_tweets:
+                build: etl_job/
+                volumes: 
+                - ./etl_job/:/app
+                depends_on:
+                - mongodb
+                - postgresdb
+                environment:
+                - POSTGRES_PASSWORD=${POSTGRES_PASSWORD_SPICED} 
+        postgresdb:
+                image: postgres:12.6
+                ports: 
+                - 5555:5432 #local 5555 on 5432 in container
+                environment:
+                - POSTGRES_USER=postgres
+                - POSTGRES_PASSWORD=${POSTGRES_PASSWORD_SPICED} 
+                - POSTGRES_DB=analyzed_tweets
+
+
